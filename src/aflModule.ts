@@ -15,12 +15,11 @@ export function parseAndValidateTypeScript(code: string): { tree: Parser.Tree | 
   const errors: string[] = [];
 
   // Start at the root node using the external visitTree function.
-  visitTree(tree.rootNode, errors);
+  // remember the level of depth
+  let depth = 0;
+  visitTree(tree.rootNode, errors, depth);
   console.log('Tree has errors?:', tree.rootNode.hasError);
-  // Heuristic: flag missing tokens as an error
-//  if (tree.rootNode.toString().includes("MISSING")) {
-//    errors.push("Syntax error detected: missing tokens in the syntax tree.");
-//  }
+
   return { tree, errors };
 }
 
@@ -29,7 +28,14 @@ export function parseAndValidateTypeScript(code: string): { tree: Parser.Tree | 
  * @param node - The syntax node to visit.
  * @param errors - An array where error messages are pushed.
  */
-export function visitTree(node: Parser.SyntaxNode, errors: string[]): void {
+export function visitTree(node: Parser.SyntaxNode, errors: string[], depth: number): void {
+  // log the node type
+  // the indent is 2 spaces for each level of depth
+  const indent = ' '.repeat(depth * 2);
+  // add "missing" if the node is missing 
+  const missing = node.isMissing ? 'is missing!' : '';
+  console.log(indent + 'Node type:', node.type, missing);
+
   if (node.type === 'ERROR' || node.isMissing) {
     errors.push(
       `Syntax error at line ${node.startPosition.row + 1}, column ${node.startPosition.column + 1}`
@@ -39,7 +45,7 @@ export function visitTree(node: Parser.SyntaxNode, errors: string[]): void {
   for (let i = 0; i < node.childCount; i++) {
     const child = node.child(i);
     if (child) {
-      visitTree(child, errors);
+      visitTree(child, errors, depth + 1);
     }
   }
 }
