@@ -1,19 +1,18 @@
-import { add, greet, createPerson, Person } from '../src/aflModule';
+import { parseAndValidateTypeScript } from '../src/aflModule';
 
-describe('aflModule', () => {
-  it('should add two numbers correctly', () => {
-    expect(add(2, 3)).toBe(5);
-    expect(add(-1, 1)).toBe(0);
+describe('Tree-sitter Integration', () => {
+  it('should correctly parse valid TypeScript code', async () => {
+    const validCode = `function add(a: number, b: number): number { return a + b; }`;
+    const result = await parseAndValidateTypeScript(validCode);
+    expect(result.errors).toEqual([]);
+    expect(result.tree).toBeDefined();  // Check if the tree was created
   });
 
-  it('should greet a person correctly', () => {
-    expect(greet('World')).toBe('Hello, World!');
-    expect(greet('TypeScript')).toBe('Hello, TypeScript!');
-  });
-
-  it('should create a person object correctly', () => {
-    const person: Person = createPerson('John', 'Doe');
-    expect(person.firstName).toBe('John');
-    expect(person.lastName).toBe('Doe');
+  it('should detect syntax errors in invalid TypeScript code', async () => {
+    const invalidCode = `function add(a: number, b: number): number \n{\n\treturn a + ;\n}`; // Syntax error
+    const result = await parseAndValidateTypeScript(invalidCode);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.tree).toBeDefined();
+    console.log(result.errors);
   });
 });
